@@ -149,7 +149,7 @@ double prob_k_given_y (
 		double mp = m * p;
 
 		if ( k == 0 ) {
-			return ( y == 0 ? 1.0 : 0.0 );
+			return ( y == 0 ? exp(-lambda) : 0.0 );
 		}
 		else if ( k > 0 ) {
 			double tmp = -k*log(1+mp)/p + k*log(lambda) - lambda - lgamma(k+1);
