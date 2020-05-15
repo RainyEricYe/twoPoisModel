@@ -70,19 +70,10 @@ int main( int argc, char **argv )
 		//
 		printf("\t%d\t", int(rep.terminationtype)); // EXPECTED: 4
 //		printf("%s\n", x.tostring(4).c_str()); // EXPECTED: [-1,1]
+
 		double lambda = data.Z/data.N/x[0];
 		cerr << lambda << ' ' << x[0] << ' ' << x[1] <<  endl;
-/*
-		map<double, double> y_pr, y_raw_pr;
-		for ( size_t i(0); i != data.y.size(); i++ ) {
-			y_pr[ data.y[i] ] = prob_y( lambda, x[0], x[1], data.y[i], data.precision );
-			y_raw_pr[ data.y[i] ] += 1.0;
-		}
 
-		for ( size_t i(0); i != data.y.size(); i++ ) {
-			cerr << data.y[i] << ' ' << y_pr[ data.y[i] ] << ' ' << y_raw_pr[ data.y[i] ] / data.N << endl;
-		}
-		*/
 	}
 	inf.close();
 
