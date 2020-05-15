@@ -1,2 +1,4 @@
- le tmp2 |grep -v nan |perl -lane 'print $_ if $#F<3' |head -100
+# compare theoretical and empirical prob_y
+
+ ./twoPois readN2 2> tmp2
  le tmp2 |grep -v nan |perl -lane 'print $_ if $#F<3' > t.txt

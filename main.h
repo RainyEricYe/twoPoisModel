@@ -1,7 +1,3 @@
-/*
- *
- */
-
 #ifndef MAIN_H_
 #define MAIN_H_
 
@@ -68,6 +64,16 @@ double prob_y(
 		const double &precision
 		);
 
+// given readN y in a bin, return prob that has k fragments
+double prob_k_given_y (
+		const double &lambda,
+		const double &m,
+		const double &p,
+		const double &y,
+		const double &precision,
+		const double &k
+		);
+
 void LogLikelihoodFunc (
 		const real_1d_array &x,
 		double &func,
@@ -90,44 +96,17 @@ double llh(
 		const double &p
 		)
 {
-    double mp = m * p;
 	double lambda = Z/m/N;
     double llh(0);
-    double k_max = 100; // 10 * lambda
 
 	if (DEBUG)
 		cout << "~~" << m << ' ' << p << endl;
 
     for ( size_t i(0); i != y.size(); i++ ) { // elements in y are > 0
-
-        double sum(0.0);
-        for ( double k(1.0); k < k_max; k++ ) {
-			double tmp = -k*log(1+mp)/p - y[i]*log(1+1/mp) + k*log(lambda) - lambda
-				+ lgamma(y[i]+k/p) - lgamma(k/p) - lgamma(k+1) -lgamma(y[i]+1);
-
-			if (DEBUG)
-				cout << "1~" << i << ' ' << y[i] << ' ' << k << ' ' << exp(tmp) << ' ' << sum << endl;
-
-            sum += exp(tmp);
-            if ( exp(tmp) < precision ) break;
-        }
-
-        llh += log(sum);
+        llh += log( prob_y(lambda, m, p, y[i], precision) );
     }
 
-    double y0sum = exp(-lambda);
-    for ( double k(1.0); k < k_max; k++ ) {
-        double tmp = -k*log(1+mp)/p + k*log(lambda) - lambda - lgamma(k+1);
-
-		if (DEBUG)
-			cout << "2~" << k << ' ' << exp(tmp) << ' ' << y0sum << endl;
-
-        y0sum += exp(tmp);
-        if ( exp(tmp) < precision ) break;
-    }
-
-    llh += y0sum * ( N - y.size() ); // sum * Num_of_empty_bins
-
+	llh += ( N - y.size() ) * prob_y(lambda, m, p, 0.0, precision);
 	return llh;
 }
 
@@ -140,21 +119,50 @@ double prob_y(
 		)
 {
 	double pr(0.0);
+	double k_max(300.00);
+	double mp = m * p;
 
 	if ( y == 0.0 ) pr += exp(-lambda);
 
-	double k_max(200.00);
-	double mp = m * p;
-
 	for ( double k(1.0); k < k_max; k++ ) {
-		double tmp = -k*log(1+mp)/p - y*log(1+1/mp) + k*log(lambda) - lambda
-			+ lgamma(y+k/p) - lgamma(k/p) - lgamma(k+1) -lgamma(y+1);
+		double tmp = -k*log(1+mp)/p + k*log(lambda) - lambda - lgamma(k+1);
+
+		if ( y != 0.0 )
+			tmp += lgamma(y+k/p) - lgamma(k/p) -lgamma(y+1) - y*log(1+1/mp);
 
 		pr += exp(tmp);
 		if ( exp(tmp) < precision ) break;
 	}
 
 	return pr;
+}
+
+double prob_k_given_y (
+		const double &lambda,
+		const double &m,
+		const double &p,
+		const double &y,
+		const double &precision,
+		const double &k
+		)
+{
+		double mp = m * p;
+
+		if ( k == 0 ) {
+			return ( y == 0 ? 1.0 : 0.0 );
+		}
+		else if ( k > 0 ) {
+			double tmp = -k*log(1+mp)/p + k*log(lambda) - lambda - lgamma(k+1);
+
+			if ( y != 0.0 )
+				tmp += lgamma(y+k/p) - lgamma(k/p) -lgamma(y+1) - y*log(1+1/mp);
+
+			return exp(tmp) / prob_y(lambda, m, p, y, precision);
+		}
+		else {
+			cerr << "k can not < 0" << endl;
+			exit(1);
+		}
 }
 
 #endif // MAIN_H_
