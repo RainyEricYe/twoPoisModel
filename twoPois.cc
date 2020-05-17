@@ -165,22 +165,9 @@ int main( int argc, char **argv )
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
 
-
-
 		cout << "~~~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' '
 			<< f_lam << ' ' << f_lam2 << ' ' << f_llh << endl;
 
-		if ( f_lam > 0 && f_lam2 > 0 ) {
-			for ( size_t i(0); i != data.y.size(); i++ ) {
-				cout << data.y[i];
-				for ( double k(0.0); k < 300; k++ ) {
-					double pk_gy = prob_k_given_y_2lambda(f_lam, f_lam2, data.y[i], data.precision, k);
-					cout << "\t" << k << ':' << pk_gy;
-					if ( k > data.y[i]/f_lam2 + 10 && pk_gy < data.precision ) break;
-				}
-				cout << endl;
-			}
-		}
 	}
 	inf.close();
 
