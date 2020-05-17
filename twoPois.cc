@@ -67,7 +67,7 @@ int main( int argc, char **argv )
 
 			double lambda = data.Z/data.N/x[0];
 			cerr << "1~ " << lambda << ' ' << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
-			if ( rep.terminationtype != 8 ) {
+			if ( rep.terminationtype != -8 ) {
 				cerr << llh(lambda, x[0], x[1], data.y, data.precision, data.N);
 			}
 			cerr << endl;
@@ -78,7 +78,7 @@ int main( int argc, char **argv )
 */
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 
-		double f_lam(0.0), f_lam2(0.0);
+		double f_lam(0.0), f_lam2(0.0), f_llh(0.0);
 		// maximize the 2lambda model
 		//
 		try {
@@ -107,8 +107,11 @@ int main( int argc, char **argv )
 
 			double expect_lam2 = data.Z/data.N/x[0];
 			cerr << "2~ " << expect_lam2 << ' ' << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
-			if ( rep.terminationtype != 8 ) {
-				cerr << llh_2lambda(data.N, data.precision, data.y, x[0], x[1]);
+			if ( rep.terminationtype != -8 ) {
+				f_llh = llh_2lambda(data.N, data.precision, data.y, x[0], x[1]);
+				f_lam = x[0];
+				f_lam2= x[1];
+				cerr << f_llh;
 			}
 			cerr << endl;
 		}
@@ -140,13 +143,20 @@ int main( int argc, char **argv )
 			alglib::minbleicoptimize(state, diff_prob_y0_2lambda, NULL, &data);
 			minbleicresults(state, x, rep);
 
-//			printf("\t%d\t", int(rep.terminationtype)); // EXPECTED: 4
+			//			printf("\t%d\t", int(rep.terminationtype)); // EXPECTED: 4
 			//		printf("%s\n", x.tostring(4).c_str()); // EXPECTED: [-1,1]
 
 			double expect_lam2 = data.Z/data.N/x[0];
 			cerr << "3~ " << expect_lam2 << ' ' << x[0] << ' ' << expect_lam2 << ' ' << rep.terminationtype << ' ';
-			if ( rep.terminationtype != 8 ) {
-				cerr << llh_2lambda(data.N, data.precision, data.y, x[0], expect_lam2);
+			if ( rep.terminationtype != -8 ) {
+				double tmp = llh_2lambda(data.N, data.precision, data.y, x[0], expect_lam2);
+				if ( tmp > f_llh ) {
+					f_llh = tmp;
+					f_lam = x[0];
+					f_lam2= expect_lam2;
+					cerr << "good_";
+				}
+				cerr << tmp;
 			}
 			cerr << endl;
 
@@ -155,6 +165,22 @@ int main( int argc, char **argv )
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
 
+
+
+		cout << "~~~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' '
+			<< f_lam << ' ' << f_lam2 << ' ' << f_llh << endl;
+
+		if ( f_lam > 0 && f_lam2 > 0 ) {
+			for ( size_t i(0); i != data.y.size(); i++ ) {
+				cout << data.y[i];
+				for ( double k(0.0); k < 300; k++ ) {
+					double pk_gy = prob_k_given_y_2lambda(f_lam, f_lam2, data.y[i], data.precision, k);
+					cout << "\t" << k << ':' << pk_gy;
+					if ( k > data.y[i]/f_lam2 + 10 && pk_gy < data.precision ) break;
+				}
+				cout << endl;
+			}
+		}
 	}
 	inf.close();
 
