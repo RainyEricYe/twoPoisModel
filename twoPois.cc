@@ -30,15 +30,53 @@ int main( int argc, char **argv )
 		for ( size_t i(0); i != data.y.size(); i++) {
 			data.Z += data.y[i];
 		}
-/*
-		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 
-		// optimizaion log-likelihood function
+
+		cerr << endl;
+		// optimizaion log-likelihood function: 3var: lambda, mu and phi
 		//
+		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
-			real_1d_array x = "[7.0, 0.5]";
+			real_1d_array x = "[0.1, 6.0, 0.1]";
+			real_1d_array bndl = "[0.0, 0.0, 0.0]";
+			real_1d_array bndu = "[100, 100.0, 100.0]";
+			minbleicstate state;
+			minbleicreport rep;
+
+			double epsg = 0.000001;
+			double epsf = 0;
+			double epsx = 0;
+			ae_int_t maxits = 0;
+			double diffstep = data.precision;
+
+			minbleiccreatef(x, diffstep, state);
+			minbleicsetbc(state, bndl, bndu);
+			minbleicsetcond(state, epsg, epsf, epsx, maxits);
+			alglib::minbleicoptimize(state, LogLikelihoodFunc_3var, NULL, &data);
+			minbleicresults(state, x, rep);
+
+			//printf("\t%d\t", int(rep.terminationtype)); // EXPECTED: 4
+			//		printf("%s\n", x.tostring(4).c_str()); // EXPECTED: [-1,1]
+
+			cerr << "0~ " << x[0] << ' ' << x[1] << ' ' << x[2] << ' ' << rep.terminationtype << ' ';
+
+			if ( rep.terminationtype != -8 ) {
+				cerr << llh_3var( data.N, data.precision, data.y, x[0], x[1], x[2]);
+			}
+			cerr << endl;
+		}
+		catch (alglib::ap_error &e) {
+			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
+		}
+
+
+		// optimizaion log-likelihood function: 2var: mu and phi
+		//
+		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+		try {
+			real_1d_array x = "[6.0, 0.1]";
 			real_1d_array bndl = "[0.0, 0.0]";
-			real_1d_array bndu = "[300.0, 300.0]";
+			real_1d_array bndu = "[100.0, 100.0]";
 			minbleicstate state;
 			minbleicreport rep;
 
@@ -48,7 +86,7 @@ int main( int argc, char **argv )
 			ae_int_t maxits = 0;
 
 			// This variable contains differentiation step
-			double diffstep = 1.0e-6;
+			double diffstep = data.precision;
 
 			// Now we are ready to actually optimize something:
 			// * first we create optimizer
@@ -62,29 +100,30 @@ int main( int argc, char **argv )
 			alglib::minbleicoptimize(state, LogLikelihoodFunc, NULL, &data);
 			minbleicresults(state, x, rep);
 
-			printf("\t%d\t", int(rep.terminationtype)); // EXPECTED: 4
+			//printf("\t%d\t", int(rep.terminationtype)); // EXPECTED: 4
 			//		printf("%s\n", x.tostring(4).c_str()); // EXPECTED: [-1,1]
 
 			double lambda = data.Z/data.N/x[0];
 			cerr << "1~ " << lambda << ' ' << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
+
 			if ( rep.terminationtype != -8 ) {
-				cerr << llh(lambda, x[0], x[1], data.y, data.precision, data.N);
+				cerr << llh_3var( data.N, data.precision, data.y, lambda, x[0], x[1]);
 			}
 			cerr << endl;
 		}
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
-*/
-		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 
-		double f_lam(0.0), f_lam2(0.0), f_llh(0.0);
-		// maximize the 2lambda model
+
+		// maximize the 2lambda model; 2var: lam and lam2
 		//
+		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+		double f_lam(0.0), f_lam2(0.0), f_llh(0.0);
 		try {
 			real_1d_array x = "[1.0, 6.0]";
 			real_1d_array bndl = "[0.0, 0.0]";
-			real_1d_array bndu = "[300.0, 300.0]";
+			real_1d_array bndu = "[100.0, 100.0]";
 			minbleicstate state;
 			minbleicreport rep;
 
@@ -92,9 +131,7 @@ int main( int argc, char **argv )
 			double epsf = 0;
 			double epsx = 0;
 			ae_int_t maxits = 0;
-
-			// This variable contains differentiation step
-			double diffstep = 1.0e-6;
+			double diffstep = data.precision;
 
 			minbleiccreatef(x, diffstep, state);
 			minbleicsetbc(state, bndl, bndu);
@@ -121,11 +158,10 @@ int main( int argc, char **argv )
 
 		// solve diff_prob_y0_2lamda to get lambda
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
-
 		try {
 			real_1d_array x = "[1.0]";
 			real_1d_array bndl = "[0.0]";
-			real_1d_array bndu = "[300.0]";
+			real_1d_array bndu = "[100.0]";
 			minbleicstate state;
 			minbleicreport rep;
 
@@ -133,9 +169,7 @@ int main( int argc, char **argv )
 			double epsf = 0;
 			double epsx = 0;
 			ae_int_t maxits = 0;
-
-			// This variable contains differentiation step
-			double diffstep = 1.0e-6;
+			double diffstep = data.precision;
 
 			minbleiccreatef(x, diffstep, state);
 			minbleicsetbc(state, bndl, bndu);

@@ -27,6 +27,18 @@ double llh(
 		)
 {
 	double lambda = Z/m/N;
+	return llh_3var(N, precision, y, lambda, m, p);
+}
+
+double llh_3var(
+                const double &N,
+                const double &precision,
+                const vector<double> &y,
+                const double &lambda,
+                const double &m,
+                const double &p
+                )
+{
     double llh(0);
 
 	if (DEBUG)
@@ -174,6 +186,16 @@ void LogLikelihoodFunc (
 	fn_data* obj = reinterpret_cast<fn_data*>(opt_data);
 	// minimize func == maximize llh
 	func = -llh(obj->N, obj->Z, obj->precision, obj->y, x[0], x[1]);
+}
+
+void LogLikelihoodFunc_3var (
+                const real_1d_array &x,
+                double &func,
+                void   *opt_data
+                )
+{
+	fn_data* obj = reinterpret_cast<fn_data*>(opt_data);
+	func = -llh_3var(obj->N, obj->precision, obj->y, x[0], x[1], x[2]);
 }
 
 void LogLikelihoodFunc_2lambda (

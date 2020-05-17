@@ -43,6 +43,15 @@ double llh(
 		const double &p
 		);
 
+double llh_3var(
+		const double &N,
+		const double &precision,
+		const vector<double> &y,
+		const double &lambda,
+		const double &m,
+		const double &p
+		);
+
 double llh_2lambda (
 		const double &N,
 		const double &precision,
@@ -87,6 +96,12 @@ double prob_k_given_y_2lambda (
 		);
 
 void LogLikelihoodFunc (
+		const real_1d_array &x,
+		double &func,
+		void   *opt_data
+		);
+
+void LogLikelihoodFunc_3var (
 		const real_1d_array &x,
 		double &func,
 		void   *opt_data
