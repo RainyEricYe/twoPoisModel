@@ -1,7 +1,14 @@
-twoPois: main.cc main.h
-	g++ main.cc -o twoPois /home/yerui/src/alglib-3.14.0/src/*.o -I /home/yerui/src/alglib-3.14.0/src
+CC=g++ -O3 -Wall
+INCLUDE= -I /home/yerui/src/alglib-3.14.0/src 
+OBJS=main.o
+
+twoPois: twoPois.cc $(OBJS)
+	$(CC) $< -o $@ $(OBJS) /home/yerui/src/alglib-3.14.0/src/*.o $(INCLUDE)
+
+main.o: main.cc main.h
+	$(CC) -c $< -o $@ $(INCLUDE)
 
 .PHONY: clean
 
 clean:
-	-rm twoPois
+	-rm twoPois *.o
