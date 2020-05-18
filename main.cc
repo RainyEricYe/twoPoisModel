@@ -143,7 +143,7 @@ double prob_k_given_y (
 			if ( y != 0.0 )
 				tmp += lgamma(y+k/p) - lgamma(k/p) -lgamma(y+1) - y*log(1+1/mp);
 
-			return exp(tmp) / prob_y(lambda, m, p, y, precision);
+			return exp(tmp)/prob_y(lambda, m, p, y, precision);
 		}
 		else {
 			cerr << "k can not < 0" << endl;
@@ -169,7 +169,7 @@ double prob_k_given_y_2lambda (
 		if ( y != 0.0 )
 			tmp += y*log(k*lam2) -lgamma(y+1);
 
-		return exp(tmp) / prob_y_2lambda(lambda, lam2, y, precision);
+		return exp(tmp)/prob_y_2lambda(lambda, lam2, y, precision);
 	}
 	else {
 		cerr << "k can not < 0" << endl;

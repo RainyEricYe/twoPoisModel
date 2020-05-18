@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "optimization.h"
+#include "ap.h"
 
 using namespace std;
 using namespace alglib;

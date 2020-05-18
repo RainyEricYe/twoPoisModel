@@ -7,7 +7,6 @@ using namespace alglib;
 
 int main( int argc, char **argv )
 {
-
 	if ( argc < 2 ) usage(), exit(1);
 
 	ifstream inf(argv[1]);
@@ -27,13 +26,17 @@ int main( int argc, char **argv )
 			data.y.push_back(t);
 		}
 
+		double max_y(0.0);
+
 		for ( size_t i(0); i != data.y.size(); i++) {
 			data.Z += data.y[i];
+			if (data.y[i] > max_y) max_y = data.y[i];
 		}
 
 
 		map<double, vector<double> > mLP;
 		cerr << endl;
+
 		// optimizaion log-likelihood function: 3var: lambda, mu and phi
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
@@ -64,6 +67,8 @@ int main( int argc, char **argv )
 
 				for (size_t i(0); i != 3; i++ )
 					mLP[llh].push_back(x[i]);
+
+				mLP[llh].push_back(-1.0); // as a seperateor
 			}
 			cerr << endl;
 		}
@@ -104,6 +109,8 @@ int main( int argc, char **argv )
 				mLP[llh].push_back(lambda);
 				for (size_t i(0); i != 2; i++ )
 					mLP[llh].push_back(x[i]);
+
+				mLP[llh].push_back(-1.0); // as a seperateor
 			}
 			cerr << endl;
 		}
@@ -115,7 +122,7 @@ int main( int argc, char **argv )
 		// maximize the 2lambda model; 2var: lam and lam2
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
-//		double f_lam(0.0), f_lam2(0.0), f_llh(0.0);
+		//		double f_lam(0.0), f_lam2(0.0), f_llh(0.0);
 		try {
 			real_1d_array x = "[0.1, 6.0]";
 			real_1d_array bndl = "[0.0, 0.0]";
@@ -143,6 +150,8 @@ int main( int argc, char **argv )
 
 				for (size_t i(0); i != 2; i++ )
 					mLP[llh].push_back(x[i]);
+
+				mLP[llh].push_back(-1.0); // as a seperateor
 			}
 			cerr << endl;
 		}
@@ -173,12 +182,15 @@ int main( int argc, char **argv )
 
 			double expect_lam2 = data.Z/data.N/x[0];
 			cerr << "3~ " << x[0] << ' ' << expect_lam2 << ' ' << rep.terminationtype << ' ';
+
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh_2lambda(data.N, data.precision, data.y, x[0], expect_lam2);
 				cerr << llh;
 
 				mLP[llh].push_back(x[0]);
 				mLP[llh].push_back(expect_lam2);
+
+				mLP[llh].push_back(-1.0); // as a seperateor
 			}
 			cerr << endl;
 
@@ -187,21 +199,41 @@ int main( int argc, char **argv )
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
 
-//		cout << "~~~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' '
-//			<< f_lam << ' ' << f_lam2 << ' ' << f_llh << endl;
-
 		if ( mLP.size() > 0 ) {
-			 map<double, vector<double> >::reverse_iterator it = mLP.rbegin();
-			 vector<double> &v = it->second;
-			 cerr << it->first << ' ' << v[0] << ' ' << v[1];
-			 if ( v.size() > 2 ) cerr << ' ' << v[2];
-			 cerr << endl;
+			map<double, vector<double> >::reverse_iterator it = mLP.rbegin();
+			vector<double> &v = it->second;
+
+			cout << "~~~ " << isert << ' ' << data.y.size() << ' ' << data.Z
+				<< ' ' << it->first << ' ' << v[0] << ' ' << v[1];
+
+			if ( v[2] != -1.0 )
+				cout << ' ' << v[2] << ' ' << "3var" << endl;
+			else
+				cout << ' ' << "2var" << endl;
+
+			for ( double y(1.0); y <= max_y; y++ ) {
+				cout << y;
+
+				double pr;
+				for ( double k(1.0); k < max_y; k++ ) {
+					if ( v[2] != -1.0 ) {
+						pr = prob_k_given_y(v[0], v[1], v[2], y, data.precision, k);
+					}
+					else {
+						pr = prob_k_given_y_2lambda(v[0], v[1], y, data.precision, k);
+					}
+
+					if ( pr > 1e-3 ) {
+						cout << ' ' << k << ':' << pr;
+					}
+				}
+				cout << endl;
+			}
 		}
 	}
 	inf.close();
 
 	return 0;
-
 }
 
 
