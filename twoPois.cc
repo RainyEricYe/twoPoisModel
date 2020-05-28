@@ -18,7 +18,7 @@ int main( int argc, char **argv )
 		stm >> isert;
 
 		fn_data data;
-		data.precision = 1.0e-100;
+		data.precision = 1.0e-12;
 		data.N = 146.0;
 		data.Z = 0.0;
 
@@ -112,12 +112,10 @@ int main( int argc, char **argv )
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
 
-*/
 		// maximize the 2lambda model; 2var: lam and lam2
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
-		//		double f_lam(0.0), f_lam2(0.0), f_llh(0.0);
 		try {
 			real_1d_array x = "[0.1, 6.0]";
 			real_1d_array bndl = "[0.0, 0.0]";
@@ -149,9 +147,10 @@ int main( int argc, char **argv )
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
-/*
+*/
 		// solve diff_prob_y0_2lamda to get lambda
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+		cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
 			real_1d_array x = "[1.0]";
 			real_1d_array bndl = "[0.0]";
@@ -171,6 +170,7 @@ int main( int argc, char **argv )
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh_2lambda(data.N, data.precision, data.y, x[0], expect_lam2);
 				cerr << llh;
+				cout << x[0] << ' ' << expect_lam2 << ' ' << llh;
 
 				mLP[llh].push_back(x[0]);
 				mLP[llh].push_back(expect_lam2);
@@ -178,12 +178,13 @@ int main( int argc, char **argv )
 				mLP[llh].push_back(-1.0); // as a seperateor
 			}
 			cerr << endl;
+			cout << endl;
 
 		}
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
-
+/*
 		if ( mLP.size() > 0 ) {
 			map<double, vector<double> >::reverse_iterator it = mLP.rbegin();
 			vector<double> &v = it->second;
