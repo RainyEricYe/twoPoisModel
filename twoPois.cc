@@ -42,7 +42,7 @@ int main( int argc, char **argv )
 
 		map<double, vector<double> > mLP;
 		cerr << endl;
-
+/*
 		// optimizaion log-likelihood function: 3var: lambda, mu and phi
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
@@ -112,10 +112,11 @@ int main( int argc, char **argv )
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
 
-
+*/
 		// maximize the 2lambda model; 2var: lam and lam2
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+		cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		//		double f_lam(0.0), f_lam2(0.0), f_llh(0.0);
 		try {
 			real_1d_array x = "[0.1, 6.0]";
@@ -135,6 +136,7 @@ int main( int argc, char **argv )
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh_2lambda(data.N, data.precision, data.y, x[0], x[1]);
 				cerr << llh;
+				cout << x[0] << ' ' << x[1] << ' ' << llh;
 
 				for (size_t i(0); i != 2; i++ )
 					mLP[llh].push_back(x[i]);
@@ -142,11 +144,12 @@ int main( int argc, char **argv )
 				mLP[llh].push_back(-1.0); // as a seperateor
 			}
 			cerr << endl;
+			cout << endl;
 		}
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
-
+/*
 		// solve diff_prob_y0_2lamda to get lambda
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
@@ -212,6 +215,8 @@ int main( int argc, char **argv )
 				cout << endl;
 			}
 		}
+		*/
+
 	}
 	inf.close();
 
