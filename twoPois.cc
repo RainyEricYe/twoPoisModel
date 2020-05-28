@@ -18,9 +18,15 @@ int main( int argc, char **argv )
 		stm >> isert;
 
 		fn_data data;
-		data.precision = 1.0e-12;
+		data.precision = 1.0e-100;
 		data.N = 146.0;
 		data.Z = 0.0;
+
+		double epsg = 1.0e-6;
+		double epsf = 0;
+		double epsx = 0;
+		ae_int_t maxits = 0;
+		double diffstep = 1.0e-6;
 
 		while (stm >> t) {
 			data.y.push_back(t);
@@ -46,12 +52,6 @@ int main( int argc, char **argv )
 			real_1d_array bndu = "[50.0, 50.0, 50.0]";
 			minbleicstate state;
 			minbleicreport rep;
-
-			double epsg = 0.000001;
-			double epsf = 0;
-			double epsx = 0;
-			ae_int_t maxits = 0;
-			double diffstep = data.precision;
 
 			minbleiccreatef(x, diffstep, state);
 			minbleicsetbc(state, bndl, bndu);
@@ -86,12 +86,6 @@ int main( int argc, char **argv )
 			real_1d_array bndu = "[50.0, 50.0]";
 			minbleicstate state;
 			minbleicreport rep;
-
-			double epsg = 0.000001;
-			double epsf = 0;
-			double epsx = 0;
-			ae_int_t maxits = 0;
-			double diffstep = data.precision;
 
 			minbleiccreatef(x, diffstep, state);
 			minbleicsetbc(state, bndl, bndu);
@@ -130,12 +124,6 @@ int main( int argc, char **argv )
 			minbleicstate state;
 			minbleicreport rep;
 
-			double epsg = 0.000001;
-			double epsf = 0;
-			double epsx = 0;
-			ae_int_t maxits = 0;
-			double diffstep = data.precision;
-
 			minbleiccreatef(x, diffstep, state);
 			minbleicsetbc(state, bndl, bndu);
 			minbleicsetcond(state, epsg, epsf, epsx, maxits);
@@ -167,12 +155,6 @@ int main( int argc, char **argv )
 			real_1d_array bndu = "[50.0]";
 			minbleicstate state;
 			minbleicreport rep;
-
-			double epsg = 0.000001;
-			double epsf = 0;
-			double epsx = 0;
-			ae_int_t maxits = 0;
-			double diffstep = data.precision;
 
 			minbleiccreatef(x, diffstep, state);
 			minbleicsetbc(state, bndl, bndu);
