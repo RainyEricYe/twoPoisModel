@@ -29,6 +29,20 @@ double llh(
 	double lambda = Z/m/N;
 	return llh_3var(N, precision, y, lambda, m, p);
 }
+//
+// log_likelihood() of mu and phi given Nb, Z, and vector of y>0   prob_y2
+double llh2(
+		const double &N,
+		const double &Z,
+		const double &precision,
+		const vector<double> &y,
+		const double &m,
+		const double &p
+		)
+{
+	double lambda = Z/m/N;
+	return llh2_3var(N, precision, y, lambda, m, p);
+}
 
 double llh_3var(
                 const double &N,
@@ -52,6 +66,28 @@ double llh_3var(
 	return llh;
 }
 
+double llh2_3var(
+                const double &N,
+                const double &precision,
+                const vector<double> &y,
+                const double &lambda,
+                const double &m,
+                const double &p
+                )
+{
+    double llh(0);
+
+	if (DEBUG)
+		cout << "~~" << m << ' ' << p << endl;
+
+    for ( size_t i(0); i != y.size(); i++ ) { // elements in y are > 0
+        llh += log( prob_y2(lambda, m, p, y[i], precision) );
+    }
+
+	llh += ( N - y.size() ) * prob_y2(lambda, m, p, 0.0, precision);
+	return llh;
+}
+
 double llh_2lambda (
 		const double &N,
 		const double &precision,
@@ -70,7 +106,7 @@ double llh_2lambda (
 	return llh;
 }
 
-
+// Pois + Pois_overDispersion model
 double prob_y(
 		const double &lambda,
 		const double &m,
@@ -97,6 +133,33 @@ double prob_y(
 
 	return pr;
 }
+
+// Pois_overDispersion + Pois model
+double prob_y2(
+		const double &lambda,
+		const double &m,
+		const double &p,
+		const double &y,
+		const double &precision
+		)
+{
+	double pr(0.0);
+	double k_max(300.00);
+	double mp = m * p;
+
+	if ( y == 0.0 ) pr += pow( 1/(1+mp), 1/p );
+
+	for ( double k(1.0); k < k_max; k++ ) {
+		double tmp = -k*lambda + y*log(k*lambda) - lgamma(y+1)
+			+ lgamma(k+1/p) - lgamma(1/p) - lgamma(k+1) - log(1+mp)/p - k*log(1+1/mp);
+
+		pr += exp(tmp);
+		if ( exp(tmp) < precision ) break;
+	}
+
+	return pr;
+}
+
 
 double prob_y_2lambda(
 		const double &lambda,
@@ -151,6 +214,32 @@ double prob_k_given_y (
 		}
 }
 
+double prob_k_given_y2 (
+		const double &lambda,
+		const double &m,
+		const double &p,
+		const double &y,
+		const double &precision,
+		const double &k
+		)
+{
+		double mp = m * p;
+
+		if ( k == 0 ) {
+			return ( y == 0 ? pow(1/(1+mp), 1/p) /prob_y2(lambda, m, p, y, precision) : 0.0 );
+		}
+		else if ( k > 0 ) {
+			double tmp = -k*lambda + y*log(k*lambda) - lgamma(y+1)
+				+ lgamma(k+1/p) - lgamma(1/p) - lgamma(k+1) - log(1+mp)/p - k*log(1+1/mp);
+
+			return exp(tmp)/prob_y2(lambda, m, p, y, precision);
+		}
+		else {
+			cerr << "k can not < 0" << endl;
+			exit(1);
+		}
+}
+
 // given readN y in a bin, return prob that has k fragments
 double prob_k_given_y_2lambda (
 		const double &lambda,
@@ -188,6 +277,17 @@ void LogLikelihoodFunc (
 	func = -llh(obj->N, obj->Z, obj->precision, obj->y, x[0], x[1]);
 }
 
+void LogLikelihoodFunc2 (
+		const real_1d_array &x,
+		double &func,
+		void   *opt_data
+		)
+{
+	fn_data* obj = reinterpret_cast<fn_data*>(opt_data);
+	// minimize func == maximize llh
+	func = -llh2(obj->N, obj->Z, obj->precision, obj->y, x[0], x[1]);
+}
+
 void LogLikelihoodFunc_3var (
                 const real_1d_array &x,
                 double &func,
@@ -196,6 +296,16 @@ void LogLikelihoodFunc_3var (
 {
 	fn_data* obj = reinterpret_cast<fn_data*>(opt_data);
 	func = -llh_3var(obj->N, obj->precision, obj->y, x[0], x[1], x[2]);
+}
+
+void LogLikelihoodFunc2_3var (
+                const real_1d_array &x,
+                double &func,
+                void   *opt_data
+                )
+{
+	fn_data* obj = reinterpret_cast<fn_data*>(opt_data);
+	func = -llh2_3var(obj->N, obj->precision, obj->y, x[0], x[1], x[2]);
 }
 
 void LogLikelihoodFunc_2lambda (

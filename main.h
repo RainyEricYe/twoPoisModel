@@ -44,7 +44,25 @@ double llh(
 		const double &p
 		);
 
+double llh2(
+		const double &N,
+		const double &Z,
+		const double &precision,
+		const vector<double> &y,
+		const double &m,
+		const double &p
+		);
+
 double llh_3var(
+		const double &N,
+		const double &precision,
+		const vector<double> &y,
+		const double &lambda,
+		const double &m,
+		const double &p
+		);
+
+double llh2_3var(
 		const double &N,
 		const double &precision,
 		const vector<double> &y,
@@ -62,6 +80,14 @@ double llh_2lambda (
 	);
 
 double prob_y(
+		const double &lambda,
+		const double &m,
+		const double &p,
+		const double &y,
+		const double &precision
+		);
+
+double prob_y2(
 		const double &lambda,
 		const double &m,
 		const double &p,
@@ -87,6 +113,15 @@ double prob_k_given_y (
 		const double &k
 		);
 
+double prob_k_given_y2 (
+		const double &lambda,
+		const double &m,
+		const double &p,
+		const double &y,
+		const double &precision,
+		const double &k
+		);
+
 // given readN y in a bin, return prob that has k fragments
 double prob_k_given_y_2lambda (
 		const double &lambda,
@@ -102,7 +137,19 @@ void LogLikelihoodFunc (
 		void   *opt_data
 		);
 
+void LogLikelihoodFunc2 (
+		const real_1d_array &x,
+		double &func,
+		void   *opt_data
+		);
+
 void LogLikelihoodFunc_3var (
+		const real_1d_array &x,
+		double &func,
+		void   *opt_data
+		);
+
+void LogLikelihoodFunc2_3var (
 		const real_1d_array &x,
 		double &func,
 		void   *opt_data

@@ -147,7 +147,7 @@ int main( int argc, char **argv )
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
-*/
+
 		// solve diff_prob_y0_2lamda to get lambda
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
@@ -184,6 +184,79 @@ int main( int argc, char **argv )
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
+		*/
+		//
+		//
+		// optimizaion log-likelihood function: 3var: lambda, mu and phi   Pois_dis + Pois model
+		//
+		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+		try {
+			real_1d_array x = "[ 6.0, 0.1, 0.1]";
+			real_1d_array bndl = "[0.0, 0.0, 0.0]";
+			real_1d_array bndu = "[50.0, 50.0, 50.0]";
+			minbleicstate state;
+			minbleicreport rep;
+
+			minbleiccreatef(x, diffstep, state);
+			minbleicsetbc(state, bndl, bndu);
+			minbleicsetcond(state, epsg, epsf, epsx, maxits);
+			alglib::minbleicoptimize(state, LogLikelihoodFunc2_3var, NULL, &data);
+			minbleicresults(state, x, rep);
+
+			cerr << "*3~ " << x[0] << ' ' << x[1] << ' ' << x[2] << ' ' << rep.terminationtype << ' ';
+
+			if ( rep.terminationtype != -8 ) {
+				double llh = llh2_3var( data.N, data.precision, data.y, x[0], x[1], x[2]);
+				cerr << llh;
+
+				for (size_t i(0); i != 3; i++ )
+					mLP[llh].push_back(x[i]);
+
+				mLP[llh].push_back(-1.0); // as a seperateor
+			}
+			cerr << endl;
+		}
+		catch (alglib::ap_error &e) {
+			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
+		}
+
+
+		// optimizaion log-likelihood function2: 2var: mu and phi  for Pois_dis + Pois model
+		//
+		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+		try {
+			real_1d_array x = "[0.1, 0.1]";
+			real_1d_array bndl = "[0.0, 0.0]";
+			real_1d_array bndu = "[50.0, 50.0]";
+			minbleicstate state;
+			minbleicreport rep;
+
+			minbleiccreatef(x, diffstep, state);
+			minbleicsetbc(state, bndl, bndu);
+			minbleicsetcond(state, epsg, epsf, epsx, maxits);
+			alglib::minbleicoptimize(state, LogLikelihoodFunc2, NULL, &data);
+			minbleicresults(state, x, rep);
+
+			double lambda = data.Z/data.N/x[0];
+			cerr << "*2~ " << lambda << ' ' << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
+
+			if ( rep.terminationtype != -8 ) {
+				double llh = llh2_3var( data.N, data.precision, data.y, lambda, x[0], x[1]);
+				cerr << llh;
+
+				mLP[llh].push_back(lambda);
+				for (size_t i(0); i != 2; i++ )
+					mLP[llh].push_back(x[i]);
+
+				mLP[llh].push_back(-1.0); // as a seperateor
+			}
+			cerr << endl;
+		}
+		catch (alglib::ap_error &e) {
+			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
+		}
+
+
 /*
 		if ( mLP.size() > 0 ) {
 			map<double, vector<double> >::reverse_iterator it = mLP.rbegin();
