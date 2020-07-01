@@ -42,7 +42,7 @@ int main( int argc, char **argv )
 
 		map<double, vector<double> > mLP;
 		cerr << endl;
-/*
+
 		// optimizaion log-likelihood function: 3var: lambda, mu and phi
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
@@ -184,16 +184,14 @@ int main( int argc, char **argv )
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
-		*/
-		//
-		//
+
 		// optimizaion log-likelihood function: 3var: lambda, mu and phi   Pois_dis + Pois model
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
-			real_1d_array x = "[ 6.0, 0.1, 0.1]";
-			real_1d_array bndl = "[0.0, 0.0, 0.0]";
-			real_1d_array bndu = "[50.0, 50.0, 50.0]";
+			real_1d_array x = "[ 6.0, 0.1, 0.00001]";
+			real_1d_array bndl = "[0.0, 0.0, 0.00001]";
+			real_1d_array bndu = "[50.0, 50.0, 0.00001]";
 			minbleicstate state;
 			minbleicreport rep;
 
@@ -225,9 +223,9 @@ int main( int argc, char **argv )
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
-			real_1d_array x = "[0.1, 0.1]";
-			real_1d_array bndl = "[0.0, 0.0]";
-			real_1d_array bndu = "[50.0, 50.0]";
+			real_1d_array x = "[0.1, 0.00001]";
+			real_1d_array bndl = "[0.0, 0.00001]";
+			real_1d_array bndu = "[50.0, 0.00001]";
 			minbleicstate state;
 			minbleicreport rep;
 
