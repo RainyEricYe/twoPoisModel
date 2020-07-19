@@ -47,9 +47,9 @@ int main( int argc, char **argv )
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
-			real_1d_array x = "[0.1, 6.0, -1e-5]";
-			real_1d_array bndl = "[0.0, 0.0, -1e-5]";
-			real_1d_array bndu = "[50.0, 50.0, -1e-5]";
+			real_1d_array x = "[0.1, 6.0, 0.1]";
+			real_1d_array bndl = "[0.0, 0.0, 0.0]";
+			real_1d_array bndu = "[50.0, 50.0, 50.0]";
 			minbleicstate state;
 			minbleicreport rep;
 
@@ -81,9 +81,9 @@ int main( int argc, char **argv )
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
-			real_1d_array x = "[6.0, -1e-5]";
-			real_1d_array bndl = "[0.0, -1e-5]";
-			real_1d_array bndu = "[50.0, -1e-5]";
+			real_1d_array x = "[6.0, 0.1]";
+			real_1d_array bndl = "[0.0, 0.0]";
+			real_1d_array bndu = "[50.0, 50.0]";
 			minbleicstate state;
 			minbleicreport rep;
 
