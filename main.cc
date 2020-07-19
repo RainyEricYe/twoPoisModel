@@ -16,7 +16,9 @@ void usage() {
     exit(1);
 }
 
+// pois + pois_dis  2var
 // log_likelihood() of mu and phi given Nb, Z, and vector of y>0
+//
 double llh(
 		const double &N,
 		const double &Z,
@@ -29,8 +31,10 @@ double llh(
 	double lambda = Z/m/N;
 	return llh_3var(N, precision, y, lambda, m, p);
 }
+
+// pois_dis + pois  2var
+// log_likelihood() of mu and phi given Nb, Z, and vector of y>0 ; prob_y2
 //
-// log_likelihood() of mu and phi given Nb, Z, and vector of y>0   prob_y2
 double llh2(
 		const double &N,
 		const double &Z,
@@ -44,6 +48,9 @@ double llh2(
 	return llh2_3var(N, precision, y, lambda, m, p);
 }
 
+// pois + pois_dis  3var
+// log_likelihood() of lambda mu and phi
+//
 double llh_3var(
                 const double &N,
                 const double &precision,
@@ -66,6 +73,9 @@ double llh_3var(
 	return llh;
 }
 
+// pois_dis + pois  3var
+// log_likelihood() of lambda mu and phi
+//
 double llh2_3var(
                 const double &N,
                 const double &precision,
@@ -88,6 +98,9 @@ double llh2_3var(
 	return llh;
 }
 
+// pois + pois
+// log_likelihood() of lambda mu and phi
+//
 double llh_2lambda (
 		const double &N,
 		const double &precision,
@@ -106,7 +119,9 @@ double llh_2lambda (
 	return llh;
 }
 
-// Pois + Pois_overDispersion model
+// pois + pois_dis
+// prob of observe y reads in the family, given 3var: lambda mu phi
+//
 double prob_y(
 		const double &lambda,
 		const double &m,
@@ -134,7 +149,9 @@ double prob_y(
 	return pr;
 }
 
-// Pois_overDispersion + Pois model
+// pois_dis + pois
+// prob of observe y reads in the family, given 3var: lambda mu phi
+//
 double prob_y2(
 		const double &lambda,
 		const double &m,
@@ -160,7 +177,9 @@ double prob_y2(
 	return pr;
 }
 
-
+// pois + pois
+// prob of observe y reads in the family, given 2var: lambda lam2
+//
 double prob_y_2lambda(
 		const double &lambda,
 		const double &lam2,
@@ -186,6 +205,9 @@ double prob_y_2lambda(
 	return pr;
 }
 
+// pois + pois_dis
+// given readN y in a bin, return prob that has k fragments
+//
 double prob_k_given_y (
 		const double &lambda,
 		const double &m,
@@ -214,6 +236,9 @@ double prob_k_given_y (
 		}
 }
 
+// pois_dis + pois
+// given readN y in a bin, return prob that has k fragments
+//
 double prob_k_given_y2 (
 		const double &lambda,
 		const double &m,
@@ -240,7 +265,9 @@ double prob_k_given_y2 (
 		}
 }
 
+// pois + pois
 // given readN y in a bin, return prob that has k fragments
+//
 double prob_k_given_y_2lambda (
 		const double &lambda,
 		const double &lam2,
@@ -266,6 +293,7 @@ double prob_k_given_y_2lambda (
 	}
 }
 
+// pois + pois_dis  2var
 void LogLikelihoodFunc (
 		const real_1d_array &x,
 		double &func,
@@ -277,6 +305,7 @@ void LogLikelihoodFunc (
 	func = -llh(obj->N, obj->Z, obj->precision, obj->y, x[0], x[1]);
 }
 
+// pois_dis + pois  2var
 void LogLikelihoodFunc2 (
 		const real_1d_array &x,
 		double &func,
@@ -288,6 +317,7 @@ void LogLikelihoodFunc2 (
 	func = -llh2(obj->N, obj->Z, obj->precision, obj->y, x[0], x[1]);
 }
 
+// pois + pois_dis  3var
 void LogLikelihoodFunc_3var (
                 const real_1d_array &x,
                 double &func,
@@ -298,6 +328,7 @@ void LogLikelihoodFunc_3var (
 	func = -llh_3var(obj->N, obj->precision, obj->y, x[0], x[1], x[2]);
 }
 
+// pois_dis + pois  3var
 void LogLikelihoodFunc2_3var (
                 const real_1d_array &x,
                 double &func,
@@ -308,6 +339,7 @@ void LogLikelihoodFunc2_3var (
 	func = -llh2_3var(obj->N, obj->precision, obj->y, x[0], x[1], x[2]);
 }
 
+// pois + pois  2var
 void LogLikelihoodFunc_2lambda (
 		const real_1d_array &x,
 		double &func,
@@ -319,6 +351,7 @@ void LogLikelihoodFunc_2lambda (
 	func = -llh_2lambda(obj->N, obj->precision, obj->y, x[0], x[1]);
 }
 
+// pois + pois  1var
 // diff = P(Y=0) = Nempty/Nb, given lambda2 = Z/Nb/lambda
 // return diff^2, to find lambda to minimize func
 //

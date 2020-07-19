@@ -44,6 +44,7 @@ int main( int argc, char **argv )
 		cerr << endl;
 
 		// optimizaion log-likelihood function: 3var: lambda, mu and phi
+		// pois + poid_dis (ppd)
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
@@ -59,7 +60,7 @@ int main( int argc, char **argv )
 			alglib::minbleicoptimize(state, LogLikelihoodFunc_3var, NULL, &data);
 			minbleicresults(state, x, rep);
 
-			cerr << "0~ " << x[0] << ' ' << x[1] << ' ' << x[2] << ' ' << rep.terminationtype << ' ';
+			cerr << "ppd3~ " << x[0] << ' ' << x[1] << ' ' << x[2] << ' ' << rep.terminationtype << ' ';
 
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh_3var( data.N, data.precision, data.y, x[0], x[1], x[2]);
@@ -78,6 +79,7 @@ int main( int argc, char **argv )
 
 
 		// optimizaion log-likelihood function: 2var: mu and phi
+		// pois + pois_dis (ppd)
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
@@ -94,7 +96,7 @@ int main( int argc, char **argv )
 			minbleicresults(state, x, rep);
 
 			double lambda = data.Z/data.N/x[0];
-			cerr << "1~ " << lambda << ' ' << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
+			cerr << "ppd2~ " << lambda << ' ' << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
 
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh_3var( data.N, data.precision, data.y, lambda, x[0], x[1]);
@@ -113,9 +115,10 @@ int main( int argc, char **argv )
 		}
 
 		// maximize the 2lambda model; 2var: lam and lam2
+		// pois + pois
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
-		cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+		//cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
 			real_1d_array x = "[0.1, 6.0]";
 			real_1d_array bndl = "[0.0, 0.0]";
@@ -129,12 +132,12 @@ int main( int argc, char **argv )
 			alglib::minbleicoptimize(state, LogLikelihoodFunc_2lambda, NULL, &data);
 			minbleicresults(state, x, rep);
 
-			cerr << "2~ " << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
+			cerr << "pp2~ " << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
 
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh_2lambda(data.N, data.precision, data.y, x[0], x[1]);
 				cerr << llh;
-				cout << x[0] << ' ' << x[1] << ' ' << llh;
+				//cout << x[0] << ' ' << x[1] << ' ' << llh;
 
 				for (size_t i(0); i != 2; i++ )
 					mLP[llh].push_back(x[i]);
@@ -142,15 +145,17 @@ int main( int argc, char **argv )
 				mLP[llh].push_back(-1.0); // as a seperateor
 			}
 			cerr << endl;
-			cout << endl;
+			//cout << endl;
 		}
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
 
-		// solve diff_prob_y0_2lamda to get lambda
+		// solve diff_prob_y0_2lamda to get lambda; 1var ; lam
+		// pois + pois (pp)
+		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
-		cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+		//cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
 			real_1d_array x = "[1.0]";
 			real_1d_array bndl = "[0.0]";
@@ -165,12 +170,12 @@ int main( int argc, char **argv )
 			minbleicresults(state, x, rep);
 
 			double expect_lam2 = data.Z/data.N/x[0];
-			cerr << "3~ " << x[0] << ' ' << expect_lam2 << ' ' << rep.terminationtype << ' ';
+			cerr << "pp1~ " << x[0] << ' ' << expect_lam2 << ' ' << rep.terminationtype << ' ';
 
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh_2lambda(data.N, data.precision, data.y, x[0], expect_lam2);
 				cerr << llh;
-				cout << x[0] << ' ' << expect_lam2 << ' ' << llh;
+				//cout << x[0] << ' ' << expect_lam2 << ' ' << llh;
 
 				mLP[llh].push_back(x[0]);
 				mLP[llh].push_back(expect_lam2);
@@ -178,20 +183,21 @@ int main( int argc, char **argv )
 				mLP[llh].push_back(-1.0); // as a seperateor
 			}
 			cerr << endl;
-			cout << endl;
+			//cout << endl;
 
 		}
 		catch (alglib::ap_error &e) {
 			cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 		}
 
-		// optimizaion log-likelihood function: 3var: lambda, mu and phi   Pois_dis + Pois model
+		// optimizaion log-likelihood function: 3var: lambda, mu and phi
+		// Pois_dis + Pois (pdp)
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
-			real_1d_array x = "[ 6.0, 0.1, 0.00001]";
-			real_1d_array bndl = "[0.0, 0.0, 0.00001]";
-			real_1d_array bndu = "[50.0, 50.0, 0.00001]";
+			real_1d_array x = "[ 6.0, 0.1, 0.1]";
+			real_1d_array bndl = "[0.0, 0.0, 0.0]";
+			real_1d_array bndu = "[50.0, 50.0, 50.0]";
 			minbleicstate state;
 			minbleicreport rep;
 
@@ -201,7 +207,7 @@ int main( int argc, char **argv )
 			alglib::minbleicoptimize(state, LogLikelihoodFunc2_3var, NULL, &data);
 			minbleicresults(state, x, rep);
 
-			cerr << "*3~ " << x[0] << ' ' << x[1] << ' ' << x[2] << ' ' << rep.terminationtype << ' ';
+			cerr << "pdp3~ " << x[0] << ' ' << x[1] << ' ' << x[2] << ' ' << rep.terminationtype << ' ';
 
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh2_3var( data.N, data.precision, data.y, x[0], x[1], x[2]);
@@ -219,13 +225,14 @@ int main( int argc, char **argv )
 		}
 
 
-		// optimizaion log-likelihood function2: 2var: mu and phi  for Pois_dis + Pois model
+		// optimizaion log-likelihood function2: 2var: mu and phi
+		// Pois_dis + Pois (pdp)
 		//
 		cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 		try {
-			real_1d_array x = "[0.1, 0.00001]";
-			real_1d_array bndl = "[0.0, 0.00001]";
-			real_1d_array bndu = "[50.0, 0.00001]";
+			real_1d_array x = "[0.1, 0.1]";
+			real_1d_array bndl = "[0.0, 0.0]";
+			real_1d_array bndu = "[50.0, 50.0]";
 			minbleicstate state;
 			minbleicreport rep;
 
@@ -236,7 +243,7 @@ int main( int argc, char **argv )
 			minbleicresults(state, x, rep);
 
 			double lambda = data.Z/data.N/x[0];
-			cerr << "*2~ " << lambda << ' ' << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
+			cerr << "pdp2~ " << lambda << ' ' << x[0] << ' ' << x[1] << ' ' << rep.terminationtype << ' ';
 
 			if ( rep.terminationtype != -8 ) {
 				double llh = llh2_3var( data.N, data.precision, data.y, lambda, x[0], x[1]);
