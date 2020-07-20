@@ -131,6 +131,15 @@ double prob_k_given_y_2lambda (
 		const double &k
 		);
 
+double p_k_given_y_2lambda (
+		const double &lambda,
+		const double &lam2,
+		const double &y,
+		const double &precision,
+		const double &k
+		);
+
+
 void LogLikelihoodFunc (
 		const real_1d_array &x,
 		double &func,

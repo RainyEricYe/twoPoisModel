@@ -120,7 +120,7 @@ double llh_2lambda (
 }
 
 // pois + pois_dis
-// prob of observe y reads in the family, given 3var: lambda mu phi
+// prob of observe y reads in the family, given 3var: lambda + mu phi
 //
 double prob_y(
 		const double &lambda,
@@ -131,26 +131,27 @@ double prob_y(
 		)
 {
 	double pr(0.0);
-	double k_max(300.00);
 	double mp = m * p;
 
 	if ( y == 0.0 ) pr += exp(-lambda);
 
-	for ( double k(1.0); k < k_max; k++ ) {
+	double target_k = int(y / m);
+	double start_k = ( target_k - 30 <= 1.0 ? 1.0 : target_k - 30 );
+
+	for ( double k(start_k); k < target_k + 30; k++ ) {
 		double tmp = -k*log(1+mp)/p + k*log(lambda) - lambda - lgamma(k+1);
 
 		if ( y != 0.0 )
 			tmp += lgamma(y+k/p) - lgamma(k/p) -lgamma(y+1) - y*log(1+1/mp);
 
 		pr += exp(tmp);
-		if ( exp(tmp) < precision ) break;
 	}
 
 	return pr;
 }
 
 // pois_dis + pois
-// prob of observe y reads in the family, given 3var: lambda mu phi
+// prob of observe y reads in the family, given 3var: mu phi + lambda
 //
 double prob_y2(
 		const double &lambda,
@@ -161,17 +162,18 @@ double prob_y2(
 		)
 {
 	double pr(0.0);
-	double k_max(300.00);
 	double mp = m * p;
 
 	if ( y == 0.0 ) pr += pow( 1/(1+mp), 1/p );
 
-	for ( double k(1.0); k < k_max; k++ ) {
+	double target_k = int(y / lambda);
+	double start_k = ( target_k - 30 <= 1.0 ? 1.0 : target_k - 30 );
+
+	for ( double k(start_k); k < target_k + 30; k++ ) {
 		double tmp = -k*lambda + y*log(k*lambda) - lgamma(y+1)
 			+ lgamma(k+1/p) - lgamma(1/p) - lgamma(k+1) - log(1+mp)/p - k*log(1+1/mp);
 
 		pr += exp(tmp);
-		if ( exp(tmp) < precision ) break;
 	}
 
 	return pr;
@@ -188,18 +190,19 @@ double prob_y_2lambda(
 		)
 {
 	double pr(0.0);
-	double k_max(300.00);
 
 	if ( y == 0.0 ) pr += exp(-lambda);
-	
-	for ( double k(1.0); k < k_max; k++ ) {
+
+	double target_k = int(y / lam2);
+	double start_k = ( target_k - 30 <= 1.0 ? 1.0 : target_k - 30 );
+
+	for ( double k(start_k); k < target_k + 30; k++ ) {
 		double tmp = -k*lam2 + k*log(lambda) - lambda - lgamma(k+1);
 
 		if ( y != 0.0 )
 			tmp += y*log(k*lam2) -lgamma(y+1);
 
 		pr += exp(tmp);
-		if ( exp(tmp) < precision ) break;
 	}
 
 	return pr;
@@ -293,6 +296,30 @@ double prob_k_given_y_2lambda (
 	}
 }
 
+double p_k_given_y_2lambda (
+		const double &lambda,
+		const double &lam2,
+		const double &y,
+		const double &precision,
+		const double &k
+		)
+{
+	if ( k == 0 ) {
+		return ( y == 0 ? exp(-lambda) : 0.0 );
+	}
+	else if ( k > 0 ) {
+		double tmp = -k*lam2 + k*log(lambda) - lambda - lgamma(k+1);
+
+		if ( y != 0.0 )
+			tmp += y*log(k*lam2) -lgamma(y+1);
+
+		return exp(tmp);
+	}
+	else {
+		cerr << "k can not < 0" << endl;
+		exit(1);
+	}
+}
 // pois + pois_dis  2var
 void LogLikelihoodFunc (
 		const real_1d_array &x,

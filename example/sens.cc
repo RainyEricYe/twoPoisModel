@@ -36,9 +36,11 @@ int main( int argc, char **argv )
 	Option opt;
 
 	int c;
-	while ( (c=getopt(argc,argv,"o:h")) != -1 ) {
+	while ( (c=getopt(argc,argv,"o:m:dh")) != -1 ) {
 		switch (c) {
-			case 'o': opt.outFile = optarg; break;
+			case 'o': opt.outFile = optarg; 		break;
+			case 'm': opt.mutFreq = atof(optarg); 	break;
+			case 'd': opt.debug = true; 			break;
 			case 'h':
 			default:  usage(argv[0]);   exit(1);
 		}
@@ -72,6 +74,8 @@ int main( int argc, char **argv )
 		ist >> chr >> ref >> pos >> depth >> mutN;
 		if ( mutN == 0 ) continue;
 
+//		if (opt.debug) cout << chr << ' ' << ref << ' ' << pos << ' ' << depth << ' ' << mutN << endl;
+
 		double Nb(0);
 		map<double, map<double, double> > wBin, cBin, tBin;
 		// watson, crick, total --  keys: insertSize, startPos
@@ -89,12 +93,20 @@ int main( int argc, char **argv )
 
 		BamRecord br;
 		while ( rawBam.GetNextRecord(br)) {
-			if ( !br.ProperPair()
-					or br.QCFailFlag()
-					or br.Interchromosomal()
-					or br.SecondaryFlag()
+			uint32_t flag = br.AlignmentFlag();
+
+			if ( br.ChrID() != br.MateChrID()
+					or !br.ProperPair()
+					or flag & 0x4 or flag & 0x8
+					or flag & 0x100 or flag & 0x200 or flag & 0x400 or flag & 0x800
 			   ) continue;
 			/*
+			   if ( !br.ProperPair()
+			   or br.QCFailFlag()
+			   or br.Interchromosomal()
+			   or br.SecondaryFlag()
+			   ) continue;
+
 			   if ( opt.filtSoftClip
 			   && ( br.Position() != br.PositionWithSClips() || br.PositionEnd() != br.PositionWithSClips() )
 			   ) continue;
@@ -104,14 +116,18 @@ int main( int argc, char **argv )
 			double startPos( br.Position() ) ;
 			double endPos( br.PositionEnd() );
 
-			if ( startPos + opt.softEndTrim > pos
-					or endPos - opt.softEndTrim <= pos
+//			if (opt.debug) cout << insert << ' ' << startPos+1 << ' ' << endPos+1 << endl;
+
+			if ( startPos + opt.softEndTrim + 1 > pos
+					or endPos - opt.softEndTrim + 1 <= pos
 			   ) continue;
 
 			if ( insert < 0 ) {
 				startPos = br.MatePosition();
 				insert *= -1;
 			}
+
+//			if (opt.debug) cout << br;
 
 			if ( Nb == 0 )
 				Nb = br.Sequence().size() * 2 - opt.softEndTrim * 4;
@@ -152,6 +168,13 @@ int main( int argc, char **argv )
 				data.y.push_back( t.second );
 			}
 
+			if (opt.debug) {
+				cout << isert;
+				for ( auto t : it.second )
+					cout << ' ' << t.second;
+				cout << endl;
+			}
+
 			double max_y(0.0);
 			for ( size_t i(0); i != data.y.size(); i++) {
 				data.Z += data.y[i];
@@ -161,7 +184,7 @@ int main( int argc, char **argv )
 			// solve diff_prob_y0_2lamda to get lambda; 1var ; lam
 			// pois + pois (pp)
 			//
-			cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
+			//cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 			try {
 				real_1d_array x = "[1.0]";
 				real_1d_array bndl = "[0.0]";
@@ -176,15 +199,16 @@ int main( int argc, char **argv )
 				minbleicresults(state, x, rep);
 
 				double expect_lam2 = data.Z/data.N/x[0];
-				cerr << "pp1~ " << x[0] << ' ' << expect_lam2 << ' ' << rep.terminationtype << ' ';
+			//	cerr << "pp1~ " << x[0] << ' ' << expect_lam2 << ' ' << rep.terminationtype << ' ';
 				para[isert].push_back(x[0]);
 				para[isert].push_back(expect_lam2);
+//				if (opt.debug) cout << "isert " << isert << " lambda " << x[0] << " lambda2 " << expect_lam2 << endl;
 
 				if ( rep.terminationtype != -8 ) {
-					double llh = llh_2lambda(data.N, data.precision, data.y, x[0], expect_lam2);
-					cerr << llh;
+					//double llh = llh_2lambda(data.N, data.precision, data.y, x[0], expect_lam2);
+					//cerr << llh;
 				}
-				cerr << endl;
+			//	cerr << endl;
 			}
 			catch (alglib::ap_error &e) {
 				cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
@@ -201,6 +225,8 @@ int main( int argc, char **argv )
 		while ( dcsBam.GetNextRecord(br) ) {
 			double insert( br.InsertSize() ) ;
 			if ( insert < 0 ) insert *= -1;
+
+			if (opt.debug) cout << "insertSize " << insert << endl;
 
 			map<double, vector<double> >::const_iterator it = para.find(insert);
 			if ( it == para.end() ) continue;
@@ -221,18 +247,25 @@ int main( int argc, char **argv )
 				double cS = stod(fsVec[1]);
 				double tS = wS + cS;
 
-				double target_k = tS / v[1];
-				double start_k = ( target_k - 30 < 1.0 ? 1.0 : target_k - 30 );
+				if (opt.debug) cout << "w_s " << wS << " c_s " << cS << " s " << tS << endl;
+
+				double sumP = prob_y_2lambda(v[0], v[1], tS, opt.dataPrecision);
+
+				double target_k = int(tS / v[1]);
+				double start_k = ( target_k - 30 <= 1.0 ? 1.0 : target_k - 30 );
+
 				for ( double k(start_k); k < target_k + 30; k++ ) {
 
-					double pr = prob_k_given_y_2lambda(v[0], v[1], tS, opt.dataPrecision, k);
-					if ( pr < opt.dataPrecision ) break;
-					cerr << "~" << k << ' ' << tS << ' ' << v[0] << ' ' << v[1] << ' ' << pr << endl;
+					double pr = p_k_given_y_2lambda(v[0], v[1], tS, opt.dataPrecision, k) / sumP;
+					if ( pr < opt.dataPrecision ) continue;
+
+					if (opt.debug) cout << "~" << k << ' ' << tS << ' ' << v[0] << ' ' << v[1] << ' ' << pr << endl;
 
 					double wNotDet = notDetect(1/k, wS);
 					double cNotDet = notDetect(1/k, cS);
 
 					pNotDetectInFam += pr * ( wNotDet + cNotDet - wNotDet * cNotDet );
+					if (opt.debug) cout << "~~w_n " << wNotDet << " c_n " << cNotDet << " p_fam " << pNotDetectInFam << endl;
 				}
 			}
 			else {
