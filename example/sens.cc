@@ -149,9 +149,10 @@ int main( int argc, char **argv )
 
 		// estimate parameters based on collected data
 		//
-		for ( auto it : tBin ) {
+		for ( auto tb : tBin ) {
 
-			double isert(it.first);
+			double isert(tb.first);
+			const map<double, double> &mPosY = tb.second;
 
 			fn_data data;
 			data.precision = opt.dataPrecision;
@@ -164,13 +165,13 @@ int main( int argc, char **argv )
 			ae_int_t maxits = 0;
 			double diffstep = 1.0e-6;
 
-			for ( auto t : it.second ) {
+			for ( auto t : mPosY ) {
 				data.y.push_back( t.second );
 			}
 
 			if (opt.debug) {
 				cout << isert;
-				for ( auto t : it.second )
+				for ( auto t : mPosY )
 					cout << ' ' << t.second;
 				cout << endl;
 			}
@@ -230,7 +231,7 @@ int main( int argc, char **argv )
 
 			map<double, vector<double> >::const_iterator it = para.find(insert);
 			if ( it == para.end() ) continue;
-			vector<double> v = it->second;
+			const vector<double> &v = it->second;
 
 			string spType("sp"), spStr("");
 			if ( br.GetZTag(spType, spStr) ) {
