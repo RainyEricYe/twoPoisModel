@@ -15,7 +15,7 @@ class Option {
             maxSupOnEachStrand(3000),
             Ncutoff(0.1),
             minFractionInFam(0.002),
-            freqPrecision(0.00001),
+            dataPrecision(1e-12),
             lhrGapCutoff(2.0),
             phredOffset(33),
             minSupOnHaplotype(3),
@@ -27,6 +27,7 @@ class Option {
             pvalue(0.001),
             pcrError(1.0e-5),
             softEndTrim(5),
+			mutFreq(0.0001),
             randNread(0) {}
 
         ~Option(){}
@@ -38,7 +39,7 @@ class Option {
 
         double Ncutoff;
         double minFractionInFam;
-        double freqPrecision;
+        double dataPrecision;
         double lhrGapCutoff;
 
         int phredOffset;
@@ -51,6 +52,7 @@ class Option {
         double pvalue;
         double pcrError;
         long softEndTrim;
+		double mutFreq;
         size_t randNread;
 };
 

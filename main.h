@@ -167,4 +167,11 @@ void diff_prob_y0_2lambda (
 		void   *opt_data
 		);
 
+// probability that a mutation with frequency 'f', can not be detected in a read family with size 's'
+//
+double notDetect(
+		const double &f,
+		const double &s
+		);
+
 #endif // MAIN_H_

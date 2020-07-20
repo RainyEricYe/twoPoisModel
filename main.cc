@@ -367,3 +367,25 @@ void diff_prob_y0_2lambda (
 
 	func = pow(diff, 2);
 }
+
+// probability that a mutation with frequency 'f', can not be detected in a read family with size 's'
+//
+double notDetect(
+		const double &f,
+		const double &s
+		)
+{
+	if ( f == 1.0 ) return 0.0;
+
+	double lnF = log(f);
+	double lnC = log(1-f);
+
+	return (
+			exp( s*lnC )
+			+ exp( log(s) + lnF + (s-1)*lnC )
+			+ exp( log(0.5) + log(s) + log(s-1) + 2*lnF + (s-2)*lnC )
+			+ exp( log(0.005) + log(s) + log(s-1) + log(s-2) + 3*lnF + (s-3)*lnC )
+		   );
+}
+
+

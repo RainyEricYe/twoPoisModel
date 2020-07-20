@@ -15,7 +15,9 @@
 
 #include "SeqLib/BamReader.h"
 #include "SeqLib/BamWriter.h"
-#include <boost/tokenizer.hpp>
+
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace SeqLib;
@@ -59,7 +61,6 @@ int main( int argc, char **argv )
 	if ( !dcsBam.Open(dcsFile) ) cerr << "open error: " << dcsFile << endl, exit(1);
 	if ( !rawBam.Open(rawFile) ) cerr << "open error: " << rawFile << endl, exit(1);
 
-	// read each line of mutFile
 	string mutLine;
 	getline(mutf, mutLine); // skip head line
 
@@ -72,10 +73,16 @@ int main( int argc, char **argv )
 		if ( mutN == 0 ) continue;
 
 		double Nb(0);
-		map<double, map<double, double> > wBin, cBin, tBin;  // watson, crick, total, keys: insertSize, startPos
-		map<double, vector<double> > para; // parameters of model. key: insertSize
+		map<double, map<double, double> > wBin, cBin, tBin;
+		// watson, crick, total --  keys: insertSize, startPos
+
+		map<double, vector<double> > para;
+		// parameters of model --  key: insertSize
+
 		map<double, double> wSize, cSize, tSize;
 
+		// read raw.sort.bam to collect original reads distribution
+		//
 		rawBam.Reset();
 		GenomicRegion gr(chr, to_string(pos-1), to_string(pos), rawBam.Header() ); // region is 0-based
 		rawBam.SetRegion(gr);
@@ -92,6 +99,7 @@ int main( int argc, char **argv )
 			   && ( br.Position() != br.PositionWithSClips() || br.PositionEnd() != br.PositionWithSClips() )
 			   ) continue;
 			   */
+
 			double insert( br.InsertSize() ) ;
 			double startPos( br.Position() ) ;
 			double endPos( br.PositionEnd() );
@@ -123,12 +131,14 @@ int main( int argc, char **argv )
 			tSize[insert]++;
 		}
 
+		// estimate parameters based on collected data
+		//
 		for ( auto it : tBin ) {
 
 			double isert(it.first);
 
 			fn_data data;
-			data.precision = 1.0e-12;
+			data.precision = opt.dataPrecision;
 			data.N = 146.0;
 			data.Z = 0.0;
 
@@ -143,19 +153,15 @@ int main( int argc, char **argv )
 			}
 
 			double max_y(0.0);
-
 			for ( size_t i(0); i != data.y.size(); i++) {
 				data.Z += data.y[i];
 				if (data.y[i] > max_y) max_y = data.y[i];
 			}
 
-			map<double, vector<double> > mLP;
-
 			// solve diff_prob_y0_2lamda to get lambda; 1var ; lam
 			// pois + pois (pp)
 			//
 			cerr << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
-			//cout << "~ " << isert << ' ' << data.y.size() << ' ' << data.Z << ' ';
 			try {
 				real_1d_array x = "[1.0]";
 				real_1d_array bndl = "[0.0]";
@@ -174,26 +180,19 @@ int main( int argc, char **argv )
 				para[isert].push_back(x[0]);
 				para[isert].push_back(expect_lam2);
 
-
 				if ( rep.terminationtype != -8 ) {
 					double llh = llh_2lambda(data.N, data.precision, data.y, x[0], expect_lam2);
 					cerr << llh;
-					//cout << x[0] << ' ' << expect_lam2 << ' ' << llh;
-
-					mLP[llh].push_back(x[0]);
-					mLP[llh].push_back(expect_lam2);
-
-					mLP[llh].push_back(-1.0); // as a seperateor
 				}
 				cerr << endl;
-				//cout << endl;
-
 			}
 			catch (alglib::ap_error &e) {
 				cerr << "catch error: " << e.msg << " at insertSize=" << isert << endl;
 			}
 		}
 
+
+		// read dcs.bam file
 		double pNotDetect(0.0);
 
 		dcsBam.Reset();
@@ -205,6 +204,7 @@ int main( int argc, char **argv )
 
 			map<double, vector<double> >::const_iterator it = para.find(insert);
 			if ( it == para.end() ) continue;
+			vector<double> v = it->second;
 
 			string spType("sp"), spStr("");
 			if ( br.GetZTag(spType, spStr) ) {
@@ -212,17 +212,39 @@ int main( int argc, char **argv )
 			}
 
 			double pNotDetectInFam(0.0);
-
 			string fsTyps("fs"), fsStr("");
 			if ( br.GetZTag(fsTyps, fsStr) ) {
-				typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-				std::string x = ",";
-				boost::char_separator<char> sep{ x.c_str() };
-				tokenizer tok{fsStr, sep};
-				cout << "fsStr " << fsStr << endl;
-				for (const auto &t : tok) std::cout << t << '\n';
+				vector<string> fsVec;
+				boost::split(fsVec, fsStr, boost::is_any_of(","), boost::token_compress_on );
+
+				double wS = stod(fsVec[0]);
+				double cS = stod(fsVec[1]);
+				double tS = wS + cS;
+
+				double target_k = tS / v[1];
+				double start_k = ( target_k - 30 < 1.0 ? 1.0 : target_k - 30 );
+				for ( double k(start_k); k < target_k + 30; k++ ) {
+
+					double pr = prob_k_given_y_2lambda(v[0], v[1], tS, opt.dataPrecision, k);
+					if ( pr < opt.dataPrecision ) break;
+					cerr << "~" << k << ' ' << tS << ' ' << v[0] << ' ' << v[1] << ' ' << pr << endl;
+
+					double wNotDet = notDetect(1/k, wS);
+					double cNotDet = notDetect(1/k, cS);
+
+					pNotDetectInFam += pr * ( wNotDet + cNotDet - wNotDet * cNotDet );
+				}
 			}
+			else {
+				cerr << "NO fs:Z tag in the bam file: " << dcsFile << endl;
+				exit(1);
+			}
+
+			pNotDetect += log( 1 - opt.mutFreq + opt.mutFreq * pNotDetectInFam );
 		}
+
+		double sensitivity = 1 - exp(pNotDetect);
+		cout << "freq:sensitivity => " << opt.mutFreq << '\t' << sensitivity << endl;
 	}
 
 	dcsBam.Close();
