@@ -1,0 +1,7 @@
+
+# in readN2
+The first column is insertSize.
+The rest of each line are number of read pairs in bins (determined by start positions of the inserts).
+
+# twoPois.cc
+To test different read distribution model of lfmd
