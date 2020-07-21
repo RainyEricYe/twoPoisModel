@@ -9,4 +9,5 @@ perl s3_old.pl chrM_2k_3k.mut chrM_2k_3k.dcs.bam chrM_2k_3k.bam > o
 perl s3_new.pl chrM_2k_3k.mut chrM_2k_3k.dcs.bam chrM_2k_3k.bam > n   ==> same with s3_old.pl
 
 s3.pl vs s3_new.pl ,exchange position of trimEnd and insertSize +/-  ==> s3_new.pl is closer to true data.
+modify sens to sens.ex_trimEnd  , do not get similar results, due to different version of skip trimEnd.
 
